@@ -4,8 +4,8 @@ on:
     - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
-      dryrun:
-        description: 'If enabled, watcher do not create pull request (this option is currently not working).'
+      dryRun:
+        description: 'Dry Run'
         required: false
         default: 'false'
 jobs:

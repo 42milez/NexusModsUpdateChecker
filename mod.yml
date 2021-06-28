@@ -1,12 +1,12 @@
 cyberpunk2077:
   - id: 718
     name: Save Editor
-    version: 0.0
+    version: v0.10a
     path: mods/others/save_editor
     filter: Save Editor
     author: https://www.nexusmods.com/cyberpunk2077/users/42829650
   - id: 1511
     name: Redscript
-    version: 0.0
+    version: 0.2.2
     path: mods/tools/redscript
     author: https://www.nexusmods.com/cyberpunk2077/users/49982271

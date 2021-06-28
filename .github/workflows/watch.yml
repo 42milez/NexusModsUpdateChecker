@@ -1,0 +1,46 @@
+name: Watch
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: 'If enabled, watcher do not create pull request (this option is currently not working).'
+        required: false
+        default: 'false'
+jobs:
+  watch:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16.x'
+      - name: Download Latest Release
+        run: bash .github/download_latest_release.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Unpack
+        run: tar -xzvf watcher-linux64.tar.gz
+      - name: Run Watcher
+        run: ./watcher
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXUS_MODS_API_KEY: ${{ secrets.NEXUS_MODS_API_KEY }}
+  notify:
+    if: always()
+    needs: watch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Post message to Slack
+        run: ./.github/post_message_to_slack.sh
+        env:
+          GITHUB_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          NEEDS_PREVIOUS_JOB_RESULT: ${{ needs.watch.result }}
+          SLACK_BOT_USER_OAUTH_TOKEN: ${{ secrets.SLACK_BOT_USER_OAUTH_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          SLACK_USERNAME: ${{ secrets.SLACK_USERNAME }}

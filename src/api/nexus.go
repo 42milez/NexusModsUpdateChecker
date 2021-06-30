@@ -34,8 +34,8 @@ type nexusModsApi struct {
 	client http.Client
 }
 
-func (p *nexusModsApi) GetRelease(mods *nexus.ModInfoSet) ([]*nexus.Release, error) {
-	getLatestFile := func(domain string, modId int, filter string) (*nexus.File, error) {
+func (p *nexusModsApi) GetRelease(mods nexus.ModInfoSet) ([]*nexus.Release, error) {
+	getLatestFile := func(domain string, modId int, modName string, filter string) (*nexus.File, error) {
 		url := fmt.Sprintf("https://api.nexusmods.com/v1/games/%s/mods/%d/files.json?category=main", domain, modId)
 
 		var (
@@ -86,8 +86,8 @@ func (p *nexusModsApi) GetRelease(mods *nexus.ModInfoSet) ([]*nexus.Release, err
 		}
 		log.D("latest file",
 			fmt.Sprintf("domain:    %s", domain),
-			fmt.Sprintf("modId:     %d", modId),
-			fmt.Sprintf("name:      %s", latestFile.Name),
+			fmt.Sprintf("id:        %d", modId),
+			fmt.Sprintf("name:      %s", modName),
 			fmt.Sprintf("version:   %s", latestFile.Version),
 			fmt.Sprintf("size (mb): %0.2f", float64(latestFile.SizeKB)/1024))
 
@@ -96,36 +96,23 @@ func (p *nexusModsApi) GetRelease(mods *nexus.ModInfoSet) ([]*nexus.Release, err
 
 	var releases []*nexus.Release
 
-	for domain, modsOfDomain := range *mods {
-		for i, mod := range modsOfDomain {
+	for domain, modsInDomain := range mods {
+		for _, mod := range modsInDomain {
 			var (
 				f   *nexus.File
 				err error
 			)
 
-			if f, err = getLatestFile(domain, mod.ID, mod.Filter); err != nil {
+			if f, err = getLatestFile(domain, mod.ID, mod.Name, mod.Filter); err != nil {
 				log.E(fmt.Sprintf("can't get latest file: modId=%d", mod.ID))
 				return nil, Err.GetLatestFileFailed
 			}
 
-			v1 := &nexus.Version{}
-			v2 := &nexus.Version{}
-			v1.Parse(f.Version)
-			v2.Parse(mod.Version)
-
-			cond := v1.Cmp(v2)
-
-			if cond == nexus.InvalidVersion {
-				log.E(fmt.Sprintf("can't recognize version: modId=%d, current=%s, latest=%s", mod.ID, mod.Version, f.Version))
-				return nil, Err.RecognizeVersionFailed
-			}
-
-			if cond == nexus.NewerVersion {
+			if f.CmpTimestamp(mod.File.Timestamp) == nexus.NewerTimestamp {
 				log.I(fmt.Sprintf("new version released: %s (%s)", mod.Name, f.Version))
 				releases = append(releases, &nexus.Release{
-					ID:     uuid.New(),
 					Domain: domain,
-					Mod:    &modsOfDomain[i],
+					Mod:    mod,
 					File:   f,
 				})
 			}
@@ -135,13 +122,13 @@ func (p *nexusModsApi) GetRelease(mods *nexus.ModInfoSet) ([]*nexus.Release, err
 	return releases, nil
 }
 
-func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, error) {
-	getDownloadLink := func(ctx context.Context, release *nexus.Release) (string, error) {
+func (p *nexusModsApi) Download(mods nexus.ModInfoSet) ([]*nexus.LocalFile, error) {
+	getDownloadLink := func(ctx context.Context, mod *nexus.ModInfo, domain string) (string, error) {
 		url := fmt.Sprintf(
 			"https://api.nexusmods.com/v1/games/%s/mods/%d/files/%d/download_link.json",
-			release.Domain,
-			release.Mod.ID,
-			release.File.FileID)
+			domain,
+			mod.ID,
+			mod.File.FileID)
 
 		var (
 			req *http.Request
@@ -203,11 +190,19 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 		return uri, nil
 	}
 
-	downloadFile := func(ctx context.Context, uri string, release *nexus.Release) (string, error) {
-		dstPath := fmt.Sprintf("/tmp/%s", strings.Replace(release.File.FileName, " ", "_", -1))
+	downloadFile := func(ctx context.Context, mod *nexus.ModInfo, domain, uri string) (string, error) {
+		var err error
+
+		modDir := nexus.ModDir(mod, domain)
+		if _, err = os.Stat(modDir); err != nil {
+			if err = os.MkdirAll(modDir, 0755); err != nil {
+				return "", Err.CreateDirectoryFailed
+			}
+		}
+
+		dstPath := fmt.Sprintf("/%s/%s", modDir, strings.Replace(mod.File.FileName, " ", "_", -1))
 
 		var tmpFile *os.File
-		var err error
 
 		if tmpFile, err = os.Create(dstPath); err != nil {
 			return "", Err.CreateFileFailed
@@ -247,13 +242,13 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 			return "", Err.CopyFileFailed
 		}
 
-		if bytes != int64(release.File.SizeInBytes) {
+		if bytes != int64(mod.File.SizeInBytes) {
 			log.E("file size mismatch",
-				fmt.Sprintf("domain:        %s", release.Domain),
-				fmt.Sprintf("modId:         %d", release.Mod.ID),
-				fmt.Sprintf("name:          %s", release.File.Name),
-				fmt.Sprintf("version:       %s", release.File.Version),
-				fmt.Sprintf("size (expect): %d bytes", release.File.SizeInBytes),
+				fmt.Sprintf("domain:        %s", domain),
+				fmt.Sprintf("modId:         %d", mod.ID),
+				fmt.Sprintf("name:          %s", mod.File.Name),
+				fmt.Sprintf("version:       %s", mod.File.Version),
+				fmt.Sprintf("size (expect): %d bytes", mod.File.SizeInBytes),
 				fmt.Sprintf("size (actual): %d bytes", bytes))
 			return "", Err.FileSizeMismatch
 		}
@@ -263,7 +258,7 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 		return dstPath, nil
 	}
 
-	completeCh := make(chan *nexus.Release)
+	completeCh := make(chan *nexus.ModInfo)
 	errCh := make(chan error)
 
 	ret := struct {
@@ -271,20 +266,20 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 		Mtx        sync.Mutex
 	}{}
 
-	download := func(ctx context.Context, release *nexus.Release) {
-		log.D(fmt.Sprintf("download started: releaseId=%s", release.ID))
+	download := func(ctx context.Context, mod *nexus.ModInfo, domain string) {
+		log.D(fmt.Sprintf("download started: id=%d", mod.ID))
 
 		var uri string
 		var err error
 
-		uri, err = getDownloadLink(ctx, release)
+		uri, err = getDownloadLink(ctx, mod, domain)
 		if err != nil {
 			errCh <- Err.GetDownloadLinkFailed
 			return
 		}
 
 		var path string
-		path, err = downloadFile(ctx, uri, release)
+		path, err = downloadFile(ctx, mod, domain, uri)
 		if err != nil {
 			errCh <- Err.DownloadFailed
 			return
@@ -294,18 +289,17 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 		ret.Mtx.Lock()
 
 		ret.LocalFiles = append(ret.LocalFiles, &nexus.LocalFile{
-			Path:    path,
-			Release: release,
+			Mod:  mod,
+			Path: path,
 		})
 
-		log.D("download completed",
-			fmt.Sprintf("releaseId: %s", release.ID),
-			fmt.Sprintf("domain:    %s", release.Domain),
-			fmt.Sprintf("modId:     %d", release.Mod.ID),
-			fmt.Sprintf("name:      %s", release.File.Name),
-			fmt.Sprintf("version:   %s", release.File.Version))
+		log.I("download completed",
+			fmt.Sprintf("domain:  %s", domain),
+			fmt.Sprintf("id:      %d", mod.ID),
+			fmt.Sprintf("name:    %s", mod.Name),
+			fmt.Sprintf("version: %s", mod.File.Version))
 
-		completeCh <- release
+		completeCh <- mod
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -315,8 +309,10 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 
 	queue := &downloadQueue{}
 
-	for _, release := range releases {
-		queue.Push(release)
+	for domain, modsInDomain := range mods {
+		for _, mod := range modsInDomain {
+			queue.Push(mod, domain)
+		}
 	}
 
 	// perform initial downloads
@@ -325,15 +321,15 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 		if entry == nil {
 			break
 		}
-		go download(ctx, entry.Release)
+		go download(ctx, entry.Mod, entry.Domain)
 	}
 
 	for {
 		select {
-		case release := <-completeCh:
-			queue.Done(release.ID)
+		case mod := <-completeCh:
+			queue.Done(mod.UUID)
 			if entry := queue.Pick(); entry != nil {
-				go download(ctx, entry.Release)
+				go download(ctx, entry.Mod, entry.Domain)
 			}
 		case err = <-errCh:
 			return nil, err
@@ -349,8 +345,9 @@ func (p *nexusModsApi) Download(releases []*nexus.Release) ([]*nexus.LocalFile, 
 type downloadStatus int
 
 type downloadQueueEntry struct {
-	Release *nexus.Release
-	Status  downloadStatus
+	Domain string
+	Mod    *nexus.ModInfo
+	Status downloadStatus
 }
 
 type downloadQueue struct {
@@ -380,7 +377,7 @@ func (p *downloadQueue) InProgressCount() (ret int) {
 func (p *downloadQueue) Done(id uuid.UUID) {
 	for elem := p.queue.Front(); elem != nil; elem = elem.Next() {
 		entry := elem.Value.(*downloadQueueEntry)
-		if entry.Release.ID == id {
+		if entry.Mod.UUID == id {
 			entry.Status = completed
 			break
 		}
@@ -423,10 +420,11 @@ func (p *downloadQueue) Pick() *downloadQueueEntry {
 	return ret
 }
 
-func (p *downloadQueue) Push(release *nexus.Release) {
+func (p *downloadQueue) Push(mod *nexus.ModInfo, domain string) {
 	entry := &downloadQueueEntry{
-		Release: release,
-		Status:  notStarted,
+		Domain: domain,
+		Mod:    mod,
+		Status: notStarted,
 	}
 	p.queue.PushBack(entry)
 }

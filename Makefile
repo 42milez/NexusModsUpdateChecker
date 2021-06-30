@@ -42,7 +42,12 @@ compile:
 	@-rm -f $(STDERR)
 	@-touch $(STDERR)
 	@-$(MAKE) -s go-compile 2> $(STDERR)
-	@cat $(STDERR) | sed -e '1s/^/Error:\n/' | sed '/^make\[.*\]/d' | sed "s/^/  /g" | sed -r "s/(.*)/\x1b[38;5;9m\1\x1b[0m/g"
+	@cat $(STDERR) \
+		| sed -e '1s/^/Error:\n/' \
+		| sed '/^make\[.*\]/d' \
+		| sed "s/^/  /g" \
+		| sed -r "s/(.*)/\1/g" \
+		| xargs -I {} sh -c 'printf "\033[31m{}\033[0m\n"'
 
 ## fmt: run formatter
 .PHONY: fmt

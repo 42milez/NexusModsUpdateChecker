@@ -12,6 +12,10 @@ func Unpack7z(srcFile string, dstDir string) ([]string, error) {
 	var reader *unarr.Archive
 	var err error
 
+	if _, err = os.Stat(dstDir); err == nil {
+		return nil, Err.DirectoryAlreadyExists
+	}
+
 	if reader, err = unarr.NewArchive(srcFile); err != nil {
 		return nil, Err.OpenFileFailed
 	}

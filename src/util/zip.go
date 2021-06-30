@@ -6,6 +6,7 @@ import (
 	Err "github.com/42milez/NexusModsWatcher/src/error"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -19,17 +20,24 @@ func UnpackZip(srcFile string, dstDir string) ([]string, error) {
 		}
 		defer closeIoReadCloser(origFile)
 
-		var filePath string
+		var path string
 
 		if f.FileInfo().IsDir() {
-			if err = os.MkdirAll(fmt.Sprintf("%s/%s", dstDir, f.Name), f.Mode()); err != nil {
+			if err = os.MkdirAll(fmt.Sprintf("%s/%s", dstDir, f.Name), 0755); err != nil {
 				return "", Err.CreateDirectoryFailed
 			}
 		} else {
 			var dstFile *os.File
 			flag := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+			dstPath := fmt.Sprintf("%s/%s", dstDir, f.Name)
 
-			if dstFile, err = os.OpenFile(fmt.Sprintf("%s/%s", dstDir, f.Name), flag, f.Mode()); err != nil {
+			if _, err = os.Stat(dstPath); err != nil {
+				if err = os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+					return "", Err.CreateDirectoryFailed
+				}
+			}
+
+			if dstFile, err = os.OpenFile(dstPath, flag, f.Mode()); err != nil {
 				return "", Err.OpenFileFailed
 			}
 			defer closeFile(dstFile)
@@ -38,13 +46,17 @@ func UnpackZip(srcFile string, dstDir string) ([]string, error) {
 				return "", Err.CopyFileFailed
 			}
 
-			filePath = dstFile.Name()
+			path = dstFile.Name()
 		}
 
-		return filePath, nil
+		return path, nil
 	}
 
 	var err error
+
+	if _, err = os.Stat(dstDir); err == nil {
+		return nil, Err.DirectoryAlreadyExists
+	}
 
 	if err = os.MkdirAll(dstDir, 0755); err != nil {
 		return nil, Err.CreateDirectoryFailed

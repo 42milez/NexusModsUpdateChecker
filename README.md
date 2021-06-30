@@ -10,9 +10,9 @@ make compile RELEASE=true
 ```
 
 #### Update metadata
-Execute `./bin/watcher` with `update` sub-command, then mod metadata is stored into `mod.yml`. Also, a pull request which includes the updates is created automatically.
+Execute `./bin/checker` with `update` sub-command, then mod metadata is stored into `mod.yml`. Also, a pull request which includes the updates is created automatically.
 ```shell
-./bin/watcher update
+./bin/checker update
 ```
 If you do not yet add mod id to mod.yml, add it prior to updating.
 ```yaml
@@ -23,10 +23,10 @@ cyberpunk2077:
 ```
 Also, if you would not like to create pull request automatically, you can use `-c` flag.
 ```shell
-./bin/watcher -c=false update
+./bin/checker -c=false update
 ```
 
 #### Download mods
 ```shell
-./bin/watcher download
+./bin/checker download
 ```

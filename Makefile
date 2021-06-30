@@ -9,7 +9,7 @@ STDERR := /tmp/$(PROJECT_NAME)-stderr.txt
 MAKEFLAGS += --silent
 
 MAIN_FILENAME := src/main.go
-BINARY_FILENAME := watcher
+BINARY_FILENAME := checker
 
 ifeq ($(RELEASE), true)
 	BUILD_FLAGS := -ldflags "-X main.Release=true"

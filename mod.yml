@@ -2,6 +2,22 @@ cyberpunk2077:
   - id: 107
     name: Cyber Engine Tweaks
     author: https://www.nexusmods.com/cyberpunk2077/users/3386513
+    file:
+      fileId: 14490
+      fileName: 1.23 patch support-107-1-14-0-1623949544.zip
+      name: 1.23 patch support
+      sizeInBytes: 2775005
+      timestamp: 1623949544
+      version: 1.14.0
+    uuid: 06c9af91-a263-4e1c-8e4a-75f6fbef31f2
   - id: 1511
     name: Redscript
     author: https://www.nexusmods.com/cyberpunk2077/users/49982271
+    file:
+      fileId: 14462
+      fileName: redscript-1511-0-2-2-1623854546.7z
+      name: redscript
+      sizeInBytes: 396202
+      timestamp: 1623854546
+      version: 0.2.2
+    uuid: 0e8988dc-32f5-4cea-90d7-0e9ddedfb5c3

@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/42milez/NexusModsWatcher/src/api"
-	Err "github.com/42milez/NexusModsWatcher/src/error"
-	"github.com/42milez/NexusModsWatcher/src/log"
-	"github.com/42milez/NexusModsWatcher/src/nexus"
-	"github.com/42milez/NexusModsWatcher/src/util"
+	"github.com/42milez/NexusModsUpdateChecker/src/api"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
+	"github.com/42milez/NexusModsUpdateChecker/src/log"
+	"github.com/42milez/NexusModsUpdateChecker/src/nexus"
+	"github.com/42milez/NexusModsUpdateChecker/src/util"
 	"time"
 )
 

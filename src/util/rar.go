@@ -1,7 +1,7 @@
 package util
 
 import (
-	Err "github.com/42milez/NexusModsWatcher/src/error"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
 	"github.com/mholt/archiver/v3"
 	"os"
 	"strings"

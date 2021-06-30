@@ -18,13 +18,13 @@ jobs:
         run: make compile RELEASE=true
       - name: Archive
         run: |
-          tar -czvf ./bin/watcher-linux64.tar.gz -C ./bin/ watcher
+          tar -czvf ./bin/checker-linux64.tar.gz -C ./bin/ checker
       - name: Create release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ./bin/watcher-linux64.tar.gz
+            ./bin/checker-linux64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   notify:

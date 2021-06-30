@@ -1,7 +1,7 @@
 package util
 
 import (
-	Err "github.com/42milez/NexusModsWatcher/src/error"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
 	"github.com/gen2brain/go-unarr"
 	"os"
 	"strings"

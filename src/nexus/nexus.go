@@ -3,9 +3,9 @@ package nexus
 import (
 	"context"
 	"fmt"
-	Err "github.com/42milez/NexusModsWatcher/src/error"
-	"github.com/42milez/NexusModsWatcher/src/log"
-	"github.com/42milez/NexusModsWatcher/src/util"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
+	"github.com/42milez/NexusModsUpdateChecker/src/log"
+	"github.com/42milez/NexusModsUpdateChecker/src/util"
 	"github.com/google/go-github/v35/github"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"

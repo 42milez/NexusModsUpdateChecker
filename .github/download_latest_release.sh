@@ -1,7 +1,7 @@
 #!/bin/bash
 
-readonly REPO='42milez/NexusModsWatcher'
-readonly ASSET_NAME='watcher-linux64.tar.gz'
+readonly REPO='42milez/NexusModsUpdateChecker'
+readonly ASSET_NAME='checker-linux64.tar.gz'
 
 readonly TAG_ID=$(curl --show-error --silent \
   -H "Authorization: token ${GITHUB_TOKEN}" \

@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"fmt"
-	Err "github.com/42milez/NexusModsWatcher/src/error"
-	"github.com/42milez/NexusModsWatcher/src/util"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
+	"github.com/42milez/NexusModsUpdateChecker/src/util"
 	"github.com/google/go-github/v35/github"
 	"golang.org/x/oauth2"
 	"os"
@@ -13,7 +13,7 @@ import (
 
 const accessTokenName = "GITHUB_TOKEN"
 const (
-	repo        = "NexusModsWatcher"
+	repo        = "NexusModsUpdateChecker"
 	repoOwner   = "42milez"
 	baseBranch  = "main"
 	authorName  = "Akihiro TAKASE"

@@ -1,4 +1,4 @@
-module github.com/42milez/NexusModsWatcher
+module github.com/42milez/NexusModsUpdateChecker
 
 go 1.16
 

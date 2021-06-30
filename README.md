@@ -1,4 +1,4 @@
-## NexusModsWatcher
+## NexusModsUpdateChecker
 [![License: MIT](https://img.shields.io/badge/License-MIT-informational.svg)](https://github.com/42milez/ProtocolStack/blob/main/LICENSE)
 
 Watches new releases on [NexusMods.com](https://www.nexusmods.com) and automatically creates a pull request which includes the new file metadata.

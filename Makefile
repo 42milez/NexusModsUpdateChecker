@@ -1,7 +1,7 @@
 include .env
 export
 
-PROJECT_NAME := NexusModsWatcher
+PROJECT_NAME := NexusModsUpdateChecker
 
 GOBIN := ./bin
 

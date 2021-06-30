@@ -3,7 +3,7 @@ package util
 import (
 	"archive/zip"
 	"fmt"
-	Err "github.com/42milez/NexusModsWatcher/src/error"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
 	"io"
 	"os"
 	"path/filepath"

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 )
-import Err "github.com/42milez/NexusModsWatcher/src/error"
+import Err "github.com/42milez/NexusModsUpdateChecker/src/error"
 
 var WorkDir string
 

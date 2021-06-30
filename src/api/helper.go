@@ -1,9 +1,9 @@
 package api
 
 import (
-	Err "github.com/42milez/NexusModsWatcher/src/error"
-	"github.com/42milez/NexusModsWatcher/src/log"
-	"github.com/42milez/NexusModsWatcher/src/util"
+	Err "github.com/42milez/NexusModsUpdateChecker/src/error"
+	"github.com/42milez/NexusModsUpdateChecker/src/log"
+	"github.com/42milez/NexusModsUpdateChecker/src/util"
 	"gopkg.in/yaml.v3"
 	"net/http"
 	"os"

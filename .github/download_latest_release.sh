@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly REPO='42milez/NexusModsWatcher'
+readonly REPO='42milez/NexusModsUpdateChecker'
 readonly ASSET_NAME='watcher-linux64.tar.gz'
 
 readonly TAG_ID=$(curl --show-error --silent \

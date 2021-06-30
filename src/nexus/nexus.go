@@ -10,19 +10,37 @@ import (
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"os"
+	"reflect"
+	"regexp"
+	"strings"
 	"time"
 )
 
+const (
+	SameTimestamp TsCondition = iota
+	NewerTimestamp
+	OlderTimestamp
+)
+
+type TsCondition int
+
 type ModInfo struct {
-	ID      int    `yaml:"id"`
-	Name    string `yaml:"name"`
-	Version string `yaml:"version"`
-	Path    string `yaml:"path"`
-	Filter  string `yaml:"filter,omitempty"`
-	Author  string `yaml:"author"`
+	ID     int    `yaml:"id"`
+	Name   string `yaml:"name"`
+	Filter string `yaml:"filter,omitempty"`
+	Author string `yaml:"author"`
+	File   struct {
+		FileID      int    `yaml:"fileId"`
+		FileName    string `yaml:"fileName"`
+		Name        string `yaml:"name"`
+		SizeInBytes int    `yaml:"sizeInBytes"`
+		Timestamp   int    `yaml:"timestamp"`
+		Version     string `yaml:"version"`
+	}
+	UUID uuid.UUID `yaml:"uuid"`
 }
 
-type ModInfoSet map[string][]ModInfo
+type ModInfoSet map[string][]*ModInfo
 
 func (p *ModInfoSet) Export(filePath string) error {
 	var out *os.File
@@ -58,13 +76,16 @@ func (p *ModInfoSet) Setup(f string) error {
 		return Err.DecodeYamlFailed
 	}
 
-	for domain, mods := range *p {
-		for _, mod := range mods {
-			dirPath := fmt.Sprintf("%s/%s", domain, mod.Path)
-			if _, err = os.Stat(dirPath); err != nil {
-				if err = os.MkdirAll(dirPath, 0755); err != nil {
-					return Err.CreateDirectoryFailed
-				}
+	isZeroUUID := func(id uuid.UUID) bool {
+		tmp1 := [16]byte(id)
+		var tmp2 [16]byte
+		return reflect.DeepEqual(tmp1, tmp2)
+	}
+
+	for _, modsInDomain := range *p {
+		for _, mod := range modsInDomain {
+			if isZeroUUID(mod.UUID) {
+				mod.UUID = uuid.New()
 			}
 		}
 	}
@@ -72,14 +93,19 @@ func (p *ModInfoSet) Setup(f string) error {
 	return nil
 }
 
-func (p *ModInfoSet) Update(domain string, id int, version string) bool {
-	for k, v := range *p {
-		if k != domain {
+func (p *ModInfoSet) Update(release *Release) bool {
+	for k, modsInDomain := range *p {
+		if k != release.Domain {
 			continue
 		}
-		for i, mod := range v {
-			if mod.ID == id {
-				(*p)[k][i].Version = version
+		for _, mod := range modsInDomain {
+			if mod.ID == release.Mod.ID {
+				mod.File.FileID = release.File.FileID
+				mod.File.FileName = release.File.FileName
+				mod.File.Name = release.File.Name
+				mod.File.SizeInBytes = release.File.SizeInBytes
+				mod.File.Version = release.File.Version
+				mod.File.Timestamp = release.File.UploadedTimestamp
 				return true
 			}
 		}
@@ -109,6 +135,16 @@ type File struct {
 	ContentPreviewLink   string    `json:"content_preview_link"`
 }
 
+func (p *File) CmpTimestamp(ts int) TsCondition {
+	if p.UploadedTimestamp > ts {
+		return NewerTimestamp
+	}
+	if p.UploadedTimestamp < ts {
+		return OlderTimestamp
+	}
+	return SameTimestamp
+}
+
 type FileUpdate struct {
 	OldFileID         int       `json:"old_file_id"`
 	NewFileID         int       `json:"new_file_id"`
@@ -124,7 +160,6 @@ type FilesApiResponse struct {
 }
 
 type Release struct {
-	ID     uuid.UUID
 	Domain string
 	Mod    *ModInfo
 	File   *File
@@ -139,8 +174,26 @@ type DownloadLink struct {
 type DownloadLinkApiResponse []DownloadLink
 
 type LocalFile struct {
-	Path    string
-	Release *Release
+	Mod  *ModInfo
+	Path string
+}
+
+func (p *LocalFile) Move(dstDir string) (string, error) {
+	if _, err := os.Stat(dstDir); err == nil {
+		return "", Err.DirectoryAlreadyExists
+	}
+
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		return "", Err.CreateDirectoryFailed
+	}
+
+	filePath := dstDir + "/" + p.Mod.File.FileName
+
+	if err := os.Rename(p.Path, filePath); err != nil {
+		return "", Err.MoveFileFailed
+	}
+
+	return filePath, nil
 }
 
 func CreateReleaseNote(releases []*Release) (string, error) {
@@ -166,6 +219,17 @@ func CreateReleaseNote(releases []*Release) (string, error) {
 	}
 
 	return output, nil
+}
+
+func ModDir(mod *ModInfo, domain string) string {
+	dirName := mod.Name
+	dirName = strings.ToLower(dirName)
+	dirName = strings.Replace(dirName, " ", "_", -1)
+	dirName = regexp.MustCompile("[-!$%^&*()_+|~=`{}\\[\\]:\";'<>?,./]").ReplaceAllLiteralString(dirName, "_")
+	dirName = regexp.MustCompile(`_{2,}`).ReplaceAllString(dirName, "_")
+	dirName = strings.TrimPrefix(dirName, "_")
+	dirName = strings.TrimSuffix(dirName, "_")
+	return fmt.Sprintf("%s/%s/%s/%s/%d/%s", util.WorkDir, "mods", domain, dirName, mod.File.Timestamp, mod.File.Version)
 }
 
 func closeFile(f *os.File) {

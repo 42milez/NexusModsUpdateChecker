@@ -1,7 +1,8 @@
 package error
 
 const (
-	CloseConnectionFailed Err = iota
+	CastFailed Err = iota
+	CloseConnectionFailed
 	CloseFileFailed
 	CopyFileFailed
 	CreateCommitFailed
@@ -15,6 +16,7 @@ const (
 	CtxCanceled
 	DecodeJsonFailed
 	DecodeYamlFailed
+	DirectoryAlreadyExists
 	DownloadFailed
 	EncodeYamlFailed
 	ExtractFailed
@@ -27,6 +29,8 @@ const (
 	InvalidAccessToken
 	InvalidApiKey
 	InvalidBranchName
+	ListArchivedContentFailed
+	MoveFileFailed
 	NoBranchProvided
 	NoCommitMessageProvided
 	NoDescriptionProvided
@@ -42,37 +46,42 @@ const (
 	RequestFailed
 	SecretNotFound
 	UnsupportedArchiveFormat
+	UnsupportedCommand
 	UnsupportedVersionFormat
 	UpdateRefFailed
 )
 
 var errors = map[Err]string{
-	CloseConnectionFailed:     "CANT_CLOSE_CONNECTION",
-	CloseFileFailed:           "CANT_CLOSE_FILE",
-	CopyFileFailed:            "CANT_COPY_FILE",
-	CreateCommitFailed:        "CANT_CREATE_COMMIT",
-	CreateDirectoryFailed:     "CANT_CREATE_DIRECTORY",
-	CreateFileFailed:          "CANT_CREATE_FILE",
-	CreatePullRequestFailed:   "CANT_CREATE_PULL_REQUEST",
-	CreateRefFailed:           "CANT_CREATE_REF",
-	CreateReleaseNoteFailed:   "CANT_CREATE_RELEASE_NOTE",
-	CreateRequestFailed:       "CANT_CREATE_REQUEST",
-	CreateTreeFailed:          "CANT_CREATE_TREE",
-	CtxCanceled:               "CTX_CANCELED",
-	DecodeJsonFailed:          "CANT_DECODE_JSON",
-	DecodeYamlFailed:          "CANT_DECODE_YAML",
-	DownloadFailed:            "CANT_DOWNLOAD",
-	EncodeYamlFailed:          "CANT_ENCODE_YAML",
-	ExtractFailed:             "CANT_EXTRACT",
+	CastFailed:                "CAST_FAILED",
+	CloseConnectionFailed:     "CLOSE_CONNECTION_FAILED",
+	CloseFileFailed:           "CLOSE_FILE_FAILED",
+	CopyFileFailed:            "COPY_FILE_FAILED",
+	CreateCommitFailed:        "CREATE_COMMIT_FAILED",
+	CreateDirectoryFailed:     "CREATE_DIRECTORY_FAILED",
+	CreateFileFailed:          "CREATE_FILE_FAILED",
+	CreatePullRequestFailed:   "CREATE_PULL_REQUEST_FAILED",
+	CreateRefFailed:           "CREATE_REF_FAILED",
+	CreateReleaseNoteFailed:   "CREATE_RELEASE_NOTE_FAILED",
+	CreateRequestFailed:       "CREATE_REQUEST_FAILED",
+	CreateTreeFailed:          "CREATE_TREE_FAILED",
+	CtxCanceled:               "CTX_CANCELED_FAILED",
+	DecodeJsonFailed:          "DECODE_JSON_FAILED",
+	DecodeYamlFailed:          "DECODE_YAML_FAILED",
+	DirectoryAlreadyExists:    "DIRECTORY_ALREADY_EXISTS",
+	DownloadFailed:            "DOWNLOAD_FAILED",
+	EncodeYamlFailed:          "ENCODE_YAML_FAILED",
+	ExtractFailed:             "EXTRACT_FAILED",
 	FileSizeMismatch:          "FILE_SIZE_MISMATCH",
-	GetDownloadLinkFailed:     "CANT_GET_DOWNLOAD_LINK",
-	GetLatestFileFailed:       "CANT_GET_LATEST_FILE",
-	GetRefFailed:              "CANT_GET_REF",
-	GetSecretFailed:           "CANT_GET_SECRET",
-	GetWorkingDirectoryFailed: "CANT_GET_WORKING_DIRECTORY",
+	GetDownloadLinkFailed:     "GET_DOWNLOAD_LINK_FAILED",
+	GetLatestFileFailed:       "GET_LATEST_FILE_FAILED",
+	GetRefFailed:              "GET_REF_FAILED",
+	GetSecretFailed:           "GET_SECRET_FAILED",
+	GetWorkingDirectoryFailed: "GET_WORKING_DIRECTORY_FAILED",
 	InvalidAccessToken:        "INVALID_ACCESS_TOKEN",
 	InvalidApiKey:             "INVALID_API_KEY",
 	InvalidBranchName:         "INVALID_BRANCH_NAME",
+	ListArchivedContentFailed: "LIST_ARCHIVED_CONTENT_FAILED",
+	MoveFileFailed:            "MOVE_FILE_FAILED",
 	NoBranchProvided:          "NO_BRANCH_PROVIDED",
 	NoCommitMessageProvided:   "NO_COMMIT_MESSAGE_PROVIDED",
 	NoDescriptionProvided:     "NO_DESCRIPTION_PROVIDED",
@@ -80,16 +89,17 @@ var errors = map[Err]string{
 	NoFileProvided:            "NO_FILE_PROVIDED",
 	NoFileReceived:            "NO_FILE_RECEIVED",
 	NoSubjectProvided:         "NO_SUBJECT_PROVIDED",
-	OpenFileFailed:            "CANT_OPEN_FILE",
-	ParseTimeFailed:           "CANT_PARSE_TIME",
-	PushCommitFailed:          "CANT_PUSH_COMMIT",
-	ReadFileFailed:            "CANT_READ_FILE",
-	RecognizeVersionFailed:    "CANT_RECOGNIZE_VERSION",
-	RequestFailed:             "CANT_DO_REQUEST",
-	SecretNotFound:            "CANT_FIND_SECRET",
+	OpenFileFailed:            "OPEN_FILE_FAILED",
+	ParseTimeFailed:           "PARSE_TIME_FAILED",
+	PushCommitFailed:          "PUSH_COMMIT_FAILED",
+	ReadFileFailed:            "READ_FILE_FAILED",
+	RecognizeVersionFailed:    "RECOGNIZE_VERSION_FAILED",
+	RequestFailed:             "DO_REQUEST_FAILED",
+	SecretNotFound:            "FIND_SECRET_FAILED",
 	UnsupportedArchiveFormat:  "UNSUPPORTED_ARCHIVE_FORMAT",
+	UnsupportedCommand:        "UNSUPPORTED_COMMAND",
 	UnsupportedVersionFormat:  "UNSUPPORTED_VERSION_FORMAT",
-	UpdateRefFailed:           "CANT_UPDATE_REF",
+	UpdateRefFailed:           "UPDATE_REF_FAILED",
 }
 
 type Err int

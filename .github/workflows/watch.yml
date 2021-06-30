@@ -4,10 +4,10 @@ on:
     - cron: '0 18 * * *'
   workflow_dispatch:
     inputs:
-      dryRun:
-        description: 'Dry Run'
-        required: false
-        default: 'false'
+      createPR:
+        description: 'Pull Request (if false, watcher does not create pull request)'
+        required: true
+        default: 'true'
 jobs:
   watch:
     runs-on: ${{ matrix.os }}
@@ -26,8 +26,16 @@ jobs:
       - name: Unpack
         run: tar -xzvf watcher-linux64.tar.gz
       - name: Run Watcher
-        run: ./watcher
+        run: |
+          if [[ "${CREATE_PULL_REQUEST}" = "true" ]]; then
+            echo "run watcher"
+            ./watcher update
+          else
+            echo "run watcher (does not create pull request)"
+            ./watcher -c=false update
+          fi
         env:
+          CREATE_PULL_REQUEST: ${{ github.event.inputs.createPR }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXUS_MODS_API_KEY: ${{ secrets.NEXUS_MODS_API_KEY }}
   notify:

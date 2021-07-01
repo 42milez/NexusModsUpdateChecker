@@ -27,7 +27,7 @@ jobs:
         run: tar -xzvf checker-linux64.tar.gz
       - name: Run Checker
         run: |
-          if [[ "${CREATE_PULL_REQUEST}" = "true" ]]; then
+          if [[ "${CREATE_PULL_REQUEST}" = "true" ]] || [[ "${CREATE_PULL_REQUEST}" = "" ]]; then
             echo "run checker"
             ./checker update
           else
